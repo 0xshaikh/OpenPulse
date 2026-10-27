@@ -1,4 +1,12 @@
-name: Deploy site
+name: Publish site
+
+# GitHub Pages is configured to publish this repository's `main` branch
+# directly, so merging a commit here *is* the deployment — there is no
+# separate build artifact to ship. This workflow is the gate before that
+# happens: it proves the exact files Pages will serve are the files the
+# test suite passes, that every asset index.html references exists, and
+# that the HTML shell is well-formed. If this goes red, the site does not
+# get published.
 
 on:
   push:
@@ -21,22 +29,80 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy to GitHub Pages
+  publish:
+    name: Validate and publish
     runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Pages
-        uses: actions/configure-pages@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Upload static site
+      - name: Run the test suite
+        run: node verify.js
+
+      - name: Every asset referenced by index.html must exist
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+
+          html = open('index.html', encoding='utf-8').read()
+          refs = re.findall(r'(?:href|src)="([^"]+)"', html)
+          missing = []
+          for ref in refs:
+              if ref.startswith(('http://', 'https://', '#', 'mailto:')):
+                  continue
+              if not os.path.isfile(ref):
+                  missing.append(ref)
+          if missing:
+              print("Missing asset(s) referenced by index.html:")
+              for m in missing:
+                  print("  -", m)
+              sys.exit(1)
+          print("All %d local asset references resolve." % len(refs))
+          PY
+
+      - name: HTML shell is well-formed
+        run: |
+          python3 - <<'PY'
+          import sys
+          from html.parser import HTMLParser
+
+          class Checker(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack, self.errors = [], []
+                  self.void = {'meta', 'link', 'img', 'br', 'hr', 'input',
+                               'source', 'track', 'wbr'}
+              def handle_starttag(self, tag, attrs):
+                  if tag not in self.void:
+                      self.stack.append(tag)
+              def handle_endtag(self, tag):
+                  if not self.stack:
+                      self.errors.append("closing </%s> with no open tags" % tag)
+                  elif self.stack[-1] != tag:
+                      self.errors.append(
+                          "expected </%s> but found </%s>" % (self.stack[-1], tag))
+                  else:
+                      self.stack.pop()
+
+          c = Checker()
+          c.feed(open('index.html', encoding='utf-8').read())
+          if c.errors or c.stack:
+              for e in c.errors:
+                  print("ERROR:", e)
+              if c.stack:
+                  print("ERROR: unclosed tags:", ", ".join(c.stack))
+              sys.exit(1)
+          print("index.html is well-formed.")
+          PY
+
+      - name: Upload the published site
         uses: actions/upload-artifact@v4
         with:
           name: site
@@ -47,7 +113,3 @@ jobs:
             favicon.svg
             icon.svg
           if-no-files-found: error
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4

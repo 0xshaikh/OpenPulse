@@ -159,7 +159,7 @@ OpenPulse/
 ├── .gitignore
 └── .github/workflows/
     ├── ci.yml                  # node verify.js on every push
-    └── deploy-site.yml         # GitHub Pages deploy
+    └── deploy-site.yml         # publish gate: validates the site before it ships
 ```
 
 Five of the six script files are **pure logic with no DOM access**, wrapped in
