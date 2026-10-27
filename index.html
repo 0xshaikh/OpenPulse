@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenPulse — local-first social content calendar</title>
+<meta name="description" content="OpenPulse is an open-source, local-first social media content calendar and publishing planner. Plan a week of posts across your channels in your browser: no account, no backend, no telemetry, zero dependencies.">
+<meta name="theme-color" content="#141416">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" href="favicon.svg">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand__icon" src="icon.svg" alt="" width="30" height="30">
+    <div class="brand__text">
+      <span class="brand__name">OpenPulse</span>
+      <span class="brand__tag">content calendar</span>
+    </div>
+  </div>
+
+  <nav class="views" role="tablist" aria-label="Views">
+    <button class="view-btn is-active" data-action="view" data-view="calendar" role="tab" aria-selected="true">Calendar</button>
+    <button class="view-btn" data-action="view" data-view="queue" role="tab" aria-selected="false">Queue</button>
+    <button class="view-btn" data-action="view" data-view="stats" role="tab" aria-selected="false">Stats</button>
+  </nav>
+
+  <div class="topbar__actions">
+    <button class="btn" data-action="accounts" title="Add or remove channels">Channels</button>
+    <button class="btn btn--ghost" data-action="btn-import" title="Load a JSON export back in">Import</button>
+    <button class="btn btn--ghost" data-action="btn-export-json" title="Download everything as JSON">Export JSON</button>
+    <button class="btn btn--ghost" data-action="btn-export-csv" title="Download the queue as CSV">Export CSV</button>
+    <button class="btn btn--ghost btn--danger" data-action="btn-reset" title="Wipe and reload the sample data">Reset</button>
+    <input id="file-import" type="file" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<main class="layout">
+
+  <aside class="sidebar">
+
+    <section class="card composer">
+      <header class="card__head">
+        <h2 id="composer-title">New post</h2>
+        <button class="btn btn--ghost btn--sm" data-action="btn-clear" title="Clear the composer (Esc)">Clear</button>
+      </header>
+
+      <label class="field">
+        <span class="field__label">Channel</span>
+        <select id="f-account"></select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Post</span>
+        <textarea id="f-body" rows="5" placeholder="What are you planning to say?" autofocus></textarea>
+        <em id="f-count" class="counter" aria-live="polite"></em>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Schedule</span>
+        <input id="f-when" type="datetime-local">
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">Notes</span>
+          <input id="f-notes" type="text" placeholder="Internal note (optional)" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field__label">Tags</span>
+          <input id="f-tags" type="text" placeholder="launch, recap" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="composer__actions">
+        <button class="btn btn--primary" data-action="btn-save" id="btn-save">Save post</button>
+        <span class="hint"><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> save · <kbd>Esc</kbd> clear</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card__head">
+        <h2>Channels</h2>
+        <button class="btn btn--ghost btn--sm" data-action="accounts">Manage</button>
+      </header>
+      <ul id="account-summary" class="account-summary"></ul>
+    </section>
+
+    <section class="card">
+      <header class="card__head"><h2>Up next</h2></header>
+      <div id="next-slot"></div>
+    </section>
+
+  </aside>
+
+  <section class="content">
+    <div id="view-calendar" class="view" role="tabpanel"></div>
+    <div id="view-queue" class="view" role="tabpanel" hidden></div>
+    <div id="view-stats" class="view" role="tabpanel" hidden></div>
+  </section>
+
+</main>
+
+<footer class="statusbar">
+  <span id="status-storage"></span>
+  <span class="statusbar__sep">·</span>
+  <span id="status-counts"></span>
+  <span class="statusbar__spacer"></span>
+  <span class="statusbar__repo"><a href="https://github.com/0xshaikh/OpenPulse" target="_blank" rel="noopener">github.com/0xshaikh/OpenPulse</a></span>
+</footer>
+
+<div id="modal-root"></div>
+<div id="toast-root" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<script src="js/dates.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/serializers.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

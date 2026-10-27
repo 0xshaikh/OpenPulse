@@ -1,0 +1,53 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'css/**'
+      - 'js/**'
+      - 'favicon.svg'
+      - 'icon.svg'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: |
+            index.html
+            css/
+            js/
+            favicon.svg
+            icon.svg
+          if-no-files-found: error
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
